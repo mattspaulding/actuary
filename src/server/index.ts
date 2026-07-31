@@ -126,7 +126,7 @@ app.get('/', (_req, res) => {
   const paidSpend = probes.reduce((s, p) => s + (p.paidUsdc ?? 0), 0);
   const earned = earnings.reduce((s, e) => s + e.priceUsdc, 0);
   const explorer = config.probeWalletAddress
-    ? `https://explorer-testnet.arc.network/address/${config.probeWalletAddress}`
+    ? `https://testnet.arcscan.app/address/${config.probeWalletAddress}`
     : null;
   const rows = board
     .map(
