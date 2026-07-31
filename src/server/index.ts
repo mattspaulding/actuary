@@ -58,7 +58,9 @@ function scores(): ServiceScore[] {
   return scoreCache.scores;
 }
 
-app.get('/healthz', (_req, res) => {
+// Not /healthz: Google's frontend reserves that exact path on run.app
+// domains and answers 404 before the request reaches the container.
+app.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
 

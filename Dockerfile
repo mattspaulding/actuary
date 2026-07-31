@@ -7,6 +7,10 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY tsconfig.json ./
 COPY src ./src
+# Snapshot of local probe history so the cloud leaderboard shows real data;
+# the deployed service keeps appending to its own (ephemeral) copy.
+# Roadmap: shared GCS volume so fleet and API read/write one dataset.
+COPY data ./data
 ENV NODE_ENV=production
 # NOTE: set CIRCLE_ACCEPT_TERMS=1 in the Cloud Run service env ONLY after the
 # operator has personally accepted https://agents.circle.com/terms-of-use.

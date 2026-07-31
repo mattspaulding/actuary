@@ -1,0 +1,8 @@
+# Cloud Build upload rules. NOTE: .env must never ship — secrets go in via
+# --set-env-vars. data/ IS shipped as a read-only snapshot for the leaderboard.
+.git/
+node_modules/
+.env
+data/probe.lock
+data/probe.log
+data/launchd.log
