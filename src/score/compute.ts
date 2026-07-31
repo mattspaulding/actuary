@@ -36,14 +36,19 @@ function toGrade(composite: number): ServiceScore['grade'] {
   return 'F';
 }
 
-export function scoreService(probes: ProbeResult[]): Omit<
+export function scoreService(allProbes: ProbeResult[]): Omit<
   ServiceScore,
   'resource' | 'provider' | 'category'
 > {
+  // probe_error means OUR side failed (expired session, empty balance) —
+  // it says nothing about the service and must not count against uptime.
+  const probes = allProbes.filter((p) => p.outcome !== 'probe_error');
   const up = probes.filter((p) => UP_OUTCOMES.has(p.outcome));
   const uptime = probes.length ? up.length / probes.length : 0;
+  // Latency p50 uses estimate probes only: paid latency includes CLI
+  // spin-up and settlement, which is our overhead, not the service's.
   const latencyP50 = percentile(
-    up.map((p) => p.latencyMs),
+    up.filter((p) => p.mode === 'estimate').map((p) => p.latencyMs),
     0.5,
   );
   const withSchema = probes.filter((p) => p.schemaValid !== undefined);
@@ -72,7 +77,7 @@ export function scoreService(probes: ProbeResult[]): Omit<
 
   const timestamps = probes.map((p) => p.ts).sort();
   return {
-    samples: probes.length,
+    samples: probes.length, // probe_error observations excluded above
     paidSamples: probes.filter((p) => p.mode === 'paid').length,
     uptime,
     latencyP50Ms: latencyP50,
@@ -97,11 +102,15 @@ export function computeScores(): ServiceScore[] {
   }
   const scores: ServiceScore[] = [];
   for (const [resource, list] of byResource) {
+    const scored = scoreService(list);
+    // A service seen only through probe-side failures has no evidence
+    // either way; publishing a grade for it would be a false outage.
+    if (scored.samples === 0) continue;
     scores.push({
       resource,
       provider: list[list.length - 1].provider,
       category: list[list.length - 1].category,
-      ...scoreService(list),
+      ...scored,
     });
   }
   return scores.sort((a, b) => b.composite - a.composite);

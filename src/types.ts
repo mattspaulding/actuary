@@ -45,7 +45,12 @@ export type ProbeOutcome =
   /** HTTP 4xx/5xx other than 402. */
   | 'http_error'
   /** Network failure or timeout. */
-  | 'unreachable';
+  | 'unreachable'
+  /**
+   * OUR side failed (expired auth session, insufficient balance, price cap,
+   * chain mismatch). Says nothing about the service — excluded from scoring.
+   */
+  | 'probe_error';
 
 /** One probe observation, appended to data/probes.jsonl. */
 export interface ProbeResult {
@@ -57,8 +62,10 @@ export interface ProbeResult {
   outcome: ProbeOutcome;
   latencyMs: number;
   httpStatus?: number;
-  /** USDC actually spent (paid mode only). */
+  /** USDC actually spent (paid mode only), parsed from the CLI's payment record. */
   paidUsdc?: number;
+  /** Settlement reference from the payment receipt (paid mode only). */
+  txRef?: string;
   /** Whether a paid response parsed as valid JSON matching the advertised shape. */
   schemaValid?: boolean;
   /** Gemini quality grade 0-10 (paid mode only, when grading ran). */

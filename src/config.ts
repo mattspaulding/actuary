@@ -40,7 +40,8 @@ function num(name: string, fallback: number): number {
 
 export const config = {
   rootDir: root,
-  dataDir: path.join(root, 'data'),
+  /** Override with DATA_DIR when running on a mounted volume (Cloud Run). */
+  dataDir: process.env.DATA_DIR ?? path.join(root, 'data'),
 
   // Buyer / probe side
   probeWalletAddress: process.env.PROBE_WALLET_ADDRESS ?? '',
@@ -61,7 +62,7 @@ export const config = {
 
   // Grading
   geminiApiKey: process.env.GEMINI_API_KEY ?? '',
-  geminiModel: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+  geminiModel: process.env.GEMINI_MODEL ?? 'gemini-flash-latest',
 
   // Scoring window
   scoreWindowDays: num('SCORE_WINDOW_DAYS', 14),

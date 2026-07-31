@@ -7,9 +7,25 @@ export class CircleCliError extends Error {
   constructor(
     message: string,
     readonly stderr: string,
+    /** Structured error code from the CLI's JSON output, when present. */
+    readonly code?: string,
   ) {
     super(message);
     this.name = 'CircleCliError';
+  }
+}
+
+/** Pull `{error: {code, message}}` out of a failed CLI run's stdout. */
+function parseCliError(stdout: string): { code?: string; message?: string } {
+  const start = stdout.indexOf('{');
+  if (start === -1) return {};
+  try {
+    const parsed = JSON.parse(stdout.slice(start)) as {
+      error?: { code?: string; message?: string };
+    };
+    return parsed.error ?? {};
+  } catch {
+    return {};
   }
 }
 
@@ -38,16 +54,54 @@ export async function circleJson<T>(
     return (parsed.data ?? parsed) as T;
   } catch (err) {
     if (err instanceof CircleCliError) throw err;
-    const e = err as { stderr?: string; message?: string };
-    throw new CircleCliError(e.message ?? 'circle CLI failed', e.stderr ?? '');
+    const e = err as { stderr?: string; stdout?: string; message?: string };
+    const structured = parseCliError(e.stdout ?? '');
+    throw new CircleCliError(
+      structured.message ?? e.message ?? 'circle CLI failed',
+      e.stderr ?? '',
+      structured.code,
+    );
   }
 }
 
+/**
+ * Envelope from `circle services pay --output json` (after the `{data}`
+ * unwrap): a paid call carries `response` + `payment`; a free 2xx carries
+ * `response` + a "no payment required" `message` and no `payment`.
+ */
 export interface PayResult {
-  status?: number;
-  body?: unknown;
-  payment?: { amount?: string; transaction?: string };
+  response?: unknown;
+  message?: string;
+  payment?: {
+    /** e.g. "$0.001 USDC" */
+    amount?: string;
+    chain?: string;
+    scheme?: string;
+    seller?: string;
+    /** Base64 settlement receipt containing the transaction reference. */
+    receipt?: string;
+  };
   [k: string]: unknown;
+}
+
+/** Parse "$0.001 USDC" (or "0.001") into a number of USDC. */
+export function parsePaymentAmountUsdc(amount?: string): number | null {
+  if (!amount) return null;
+  const m = amount.match(/([0-9]*\.?[0-9]+)/);
+  return m ? Number(m[1]) : null;
+}
+
+/** Extract the settlement transaction reference from a payment receipt. */
+export function parseReceiptTxRef(receipt?: string): string | undefined {
+  if (!receipt) return undefined;
+  try {
+    const decoded = JSON.parse(Buffer.from(receipt, 'base64').toString('utf8')) as {
+      transaction?: string;
+    };
+    return decoded.transaction;
+  } catch {
+    return undefined;
+  }
 }
 
 /**

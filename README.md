@@ -83,8 +83,31 @@ npm run probe:paid
 - **Creativeness & Innovation** — a watchdog that funds its own observations;
   no reputation layer exists on the marketplace today.
 - **Customer Experience** — one $0.001 call saves an agent from wasting 10-300x
-  that on a dead service.
-- **Gemini requirement** — every paid probe is graded by Gemini in production.
+  that on a dead service, and unknown services answer 404 free — a buyer never
+  pays to learn we don't know.
+- **Gemini requirement** — paid probes are graded by Gemini in production
+  (`GEMINI_API_KEY` required; grading gaps are counted in every round summary).
+
+## Proof items (Circle prize submission)
+
+- Agent wallet: `PROBE_WALLET_ADDRESS` in `.env` — shown with a block-explorer
+  link on the leaderboard.
+- Every paid probe records its settlement reference (`txRef`) in
+  `data/probes.jsonl`; every sold lookup lands in `data/earnings.jsonl` with
+  payer and transaction.
+- `circle transaction list` and the Arc/Base explorers corroborate both.
+
+## Scheduling
+
+Local (macOS launchd, every 30 minutes): `scripts/probe-round.sh` plus a
+`com.actuary.probe` LaunchAgent —
+
+```bash
+launchctl load ~/Library/LaunchAgents/com.actuary.probe.plist
+```
+
+Cloud (Cloud Run): build the Dockerfile with `RUN_MODE=probe-loop` for the
+fleet (mount a volume at `DATA_DIR`) and default `RUN_MODE` for the score API.
 
 ## Roadmap to production
 

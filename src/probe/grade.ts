@@ -42,6 +42,9 @@ export async function gradeResponse(
       model: config.geminiModel,
       contents: prompt,
       config: {
+        // A hung grading call must never stall the round: launchd runs one
+        // instance per label, so a stuck process stops the fleet entirely.
+        abortSignal: AbortSignal.timeout(30_000),
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
