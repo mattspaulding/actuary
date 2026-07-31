@@ -109,6 +109,17 @@ launchctl load ~/Library/LaunchAgents/com.actuary.probe.plist
 Cloud (Cloud Run): build the Dockerfile with `RUN_MODE=probe-loop` for the
 fleet (mount a volume at `DATA_DIR`) and default `RUN_MODE` for the score API.
 
+## Live deployment
+
+Score API on Google Cloud Run: https://actuary-695835808761.us-central1.run.app
+(`/health`, free `/v1/scores`, paid `/v1/score?url=…`, leaderboard at `/`).
+
+## Agent skill
+
+[`skills/check-before-you-pay`](skills/check-before-you-pay/SKILL.md) — a
+drop-in skill (Circle skill format) that teaches any agent to buy a $0.001
+Actuary scorecard before spending real money on a marketplace service.
+
 ## Roadmap to production
 
 - Cloud Run + Cloud Scheduler for continuous rounds (Dockerfile included)
