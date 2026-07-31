@@ -1,0 +1,7 @@
+month,revenue_usd,cogs_usd,marketing_usd,other_expenses_usd,net_usd,notes
+May 2026,0,0,0,0,0,pre-inception
+June 2026,0,0,0,0,0,pre-inception
+July 2026,0,0.5,0,1.0,-1.5,Cloud Run/Build near free tier (~$0.50); ElevenLabs credits ~$1 for demo narration; project started 07-30-2026
+August 2026,0,0,0,0,0,projection at submission
+
+"USDC (testnet, no fiat value)",,,,,,"0.005 USDC revenue from 5 lookups (related-party, disclosed); probe spend policy-capped 2.00/day"
